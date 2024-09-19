@@ -7,8 +7,9 @@ class SSHLogin:
         self.host = host
         self.port = port
         self.passwd = os.getenv("SUDO_PASSWD")
-        self.ssh_prompt = ["ssh", self.ssh_prompt, "-p", str(self.port)]
-        self.sudo_prompt = ["ssh", f"{self.username}@{self.host}", "-p", str(self.port)]
+        self.sqlpasswd = os.getenv("MYSQL_PASSWD")
+        self.ssh_prompt = ["ssh", f"{self.username}@{self.host}", "-p", str(self.port)]
+        self.sql_promt = self.ssh_prompt.append(f"mysql -u {self.username} -p {self.sqlpasswd} -e")
 
 
 
@@ -29,7 +30,7 @@ class SSHLogin:
 
     def sudo_command(self, command):
         try:
-            sudoCmd = self.sudo_prompt.append(f"echo {self.passwd} | sudo -S {command}")
+            sudoCmd = self.ssh_prompt.append(f"echo {self.passwd} | sudo -S {command}")
 
             result = subprocess.run(sudoCmd, capture_output=True, text=True)
 
@@ -44,9 +45,9 @@ class SSHLogin:
     
     def sql_command(self, command):
         try:
-            ssh_command = ["ssh", f"{self.username}@{self.host}", "-p", str(self.port), f"echo {self.passwd} | sudo -S {command}"]
+            sqlCmd = self.sql_promt.append(f'{command}')
 
-            result = subprocess.run(ssh_command, capture_output=True, text=True)
+            result = subprocess.run(sqlCmd, capture_output=True, text=True)
 
             if result.stdout:
                 print(result.stdout)
@@ -60,8 +61,11 @@ class SSHLogin:
 if __name__ == "__main__" :
     username = "monitor"
     ftp = "192.168.140.101"
+    MariaDB = "192.168.140.103"
 
     cnx_ftp = SSHLogin(username, ftp)
+    cnx_mariaDB = SSHLogin(username, MariaDB)
 
     cnx_ftp.ssh_command("ls -la")
     cnx_ftp.sudo_command("ls -la")
+    cnx_mariaDB.sql_command("SHOW DATABASES")
