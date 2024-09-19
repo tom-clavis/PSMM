@@ -66,7 +66,7 @@ class SSHLogin:
 
     def sql_root_command(self, command):
         try:
-            self.ssh_prompt.append(f"\\\"{self.sql_root} '{command}'\\\"")
+            self.ssh_prompt.append(f"echo {self.passwd} | sudo -S \\\"{self.sql_root} '{command}'\\\"")
 
             result = subprocess.run(self.ssh_prompt, capture_output=True, text=True)
 
