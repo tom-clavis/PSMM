@@ -43,14 +43,14 @@ if __name__ == "__main__":
     cnx.sql_root_command("GRANT ALL PRIVILEGES ON *.* TO 'monitor'@'localhost' WITH GRANT OPTION;")
     print("Admin user granted")
 
-    cnx.sql_root_command("UPDATE mysql.user SET Host='localhost' WHERE User = 'root' AND Host != 'localhost';")
+    cnx.sql_root_command("ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';")
+    print("MariaDB root password changed")
+
+    cnx.sql_command("UPDATE mysql.user SET Host='localhost' WHERE User = 'root' AND Host != 'localhost';")
     print("Disallow root login remotely")
 
     cnx.sql_root_command("FLUSH PRIVILEGES;")
     print("Privileges flushed")
-
-    cnx.sql_command("ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';")
-    print("MariaDB root password changed")
 
     print("MariaDB secured")
     print("MariaDB ready to use")
