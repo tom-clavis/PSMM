@@ -9,8 +9,8 @@ class SSHLogin:
         self.passwd = os.getenv("SUDO_PASSWD")
         self.sqlpasswd = os.getenv("MYSQL_PASSWD")
         self.ssh_prompt = ["ssh", f"{self.username}@{self.host}", "-p", str(self.port)]
-        self.sql_prompt = f"mysql -u {self.username} -p {self.sqlpasswd} -e"
-        self.sql_root = f"mysql -u root -e"
+        self.sql_prompt = f"mariadb -u {self.username} -p {self.sqlpasswd} -e"
+        self.sql_root = f"mariadb -u root -e"
 
     def ssh_command(self, command):
         try:
