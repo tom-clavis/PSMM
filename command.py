@@ -9,51 +9,57 @@ class SSHLogin:
         self.passwd = os.getenv("SUDO_PASSWD")
         self.sqlpasswd = os.getenv("MYSQL_PASSWD")
         self.ssh_prompt = ["ssh", f"{self.username}@{self.host}", "-p", str(self.port)]
-        self.sql_promt = self.ssh_prompt.append(f"mysql -u {self.username} -p {self.sqlpasswd} -e")
-
-
+        self.sql_prompt = f"mysql -u {self.username} -p {self.sqlpasswd} -e"
 
     def ssh_command(self, command):
         try:
-            sshCmd = self.ssh_prompt.append(command)
+            self.ssh_prompt.append(command)
 
-            result = subprocess.run(sshCmd, capture_output=True, text=True)
+            result = subprocess.run(self.ssh_prompt, capture_output=True, text=True)
 
             if result.stdout:
                 print(result.stdout)
             if result.stderr:
                 print("Error :")
                 print(result.stderr)
+
+            self.ssh_prompt.pop()
 
         except Exception as e :
             print(f"Error : {e}")
 
     def sudo_command(self, command):
         try:
-            sudoCmd = self.ssh_prompt.append(f"echo {self.passwd} | sudo -S {command}")
+            self.ssh_prompt.append(f"echo {self.passwd} | sudo -S {command}")
 
-            result = subprocess.run(sudoCmd, capture_output=True, text=True)
+            result = subprocess.run(self.ssh_prompt, capture_output=True, text=True)
 
             if result.stdout:
                 print(result.stdout)
             if result.stderr:
                 print("Error :")
                 print(result.stderr)
+
+            self.ssh_prompt.pop()
 
         except Exception as e :
             print(f"Error : {e}")
+
     
     def sql_command(self, command):
         try:
-            sqlCmd = self.sql_promt.append(f'{command}')
+            self.ssh_prompt.append(f"\"{self.sql_prompt} {command}\"")
+            print(self.ssh_prompt)
 
-            result = subprocess.run(sqlCmd, capture_output=True, text=True)
+            result = subprocess.run(self.ssh_prompt, capture_output=True, text=True)
 
             if result.stdout:
                 print(result.stdout)
             if result.stderr:
                 print("Error :")
                 print(result.stderr)
+
+            self.ssh_prompt.pop()
 
         except Exception as e :
             print(f"Error : {e}")
@@ -68,4 +74,4 @@ if __name__ == "__main__" :
 
     cnx_ftp.ssh_command("ls -la")
     cnx_ftp.sudo_command("ls -la")
-    cnx_mariaDB.sql_command("SHOW DATABASES")
+    cnx_mariaDB.sql_command("SHOW DATABASES;")
