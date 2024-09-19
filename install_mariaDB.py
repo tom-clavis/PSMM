@@ -16,25 +16,20 @@ if __name__ == "__main__":
     print("MariaDB installed")
 
 # secure MariaDB
-    cnx.ssh_command("mysql -u root -e \'ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';\'")
-    print("MariaDB root password changed")
-
-    cnx.sql_command("DELETE FROM mysql.user WHERE User='';")
+    cnx.sql_root_command("DELETE FROM mysql.user WHERE User='';")
     print("Empty user removed")
 
-    cnx.sql_command("UPDATE mysql.user SET Host='localhost' WHERE User = 'root' AND Host != 'localhost';")
-    print("Disallow root login remotely")
 
-    cnx.sql_command("DROP DATABASE IF EXISTS test;")
+    cnx.sql_root_command("DROP DATABASE IF EXISTS test;")
     print("Test database removed")
 
-    utilisateurs_test = cnx.sql_command("SELECT User Host FROM mysql.user WHERE Db='test';")
+    utilisateurs_test = cnx.sql_root_command("SELECT User Host FROM mysql.user WHERE Db='test';")
     if utilisateurs_test:
         for utilisateur in utilisateurs_test:
-            cnx.sql_command(f"REVOKE ALL PRIVILEGES, ON test.* FROM '{utilisateur}';")
+            cnx.sql_root_command(f"REVOKE ALL PRIVILEGES, ON test.* FROM '{utilisateur}';")
     print("Test user removed")
 
-    cnx.sql_command("FLUSH PRIVILEGES;")
+    cnx.sql_root_command("FLUSH PRIVILEGES;")
     print("Privileges flushed")
 
 # restart MariaDB
@@ -42,14 +37,20 @@ if __name__ == "__main__":
     print("MariaDB restarted")
 
 # create an admin user
-    cnx.sql_command("CREATE USER 'monitor'@'localhost' IDENTIFIED BY 'monitor';")
+    cnx.sql_root_command("CREATE USER 'monitor'@'localhost' IDENTIFIED BY 'monitor';")
     print("Admin user created")
 
-    cnx.sql_command("GRANT ALL PRIVILEGES ON *.* TO 'monitor'@'localhost' WITH GRANT OPTION;")
+    cnx.sql_root_command("GRANT ALL PRIVILEGES ON *.* TO 'monitor'@'localhost' WITH GRANT OPTION;")
     print("Admin user granted")
 
-    cnx.sql_command("FLUSH PRIVILEGES;")
+    cnx.sql_root_command("UPDATE mysql.user SET Host='localhost' WHERE User = 'root' AND Host != 'localhost';")
+    print("Disallow root login remotely")
+
+    cnx.sql_root_command("FLUSH PRIVILEGES;")
     print("Privileges flushed")
+
+    cnx.sql_command("ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';")
+    print("MariaDB root password changed")
 
     print("MariaDB secured")
     print("MariaDB ready to use")

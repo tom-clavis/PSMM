@@ -10,6 +10,7 @@ class SSHLogin:
         self.sqlpasswd = os.getenv("MYSQL_PASSWD")
         self.ssh_prompt = ["ssh", f"{self.username}@{self.host}", "-p", str(self.port)]
         self.sql_prompt = f"mysql -u {self.username} -p {self.sqlpasswd} -e"
+        self.sql_root = f"mysql -u root -e"
 
     def ssh_command(self, command):
         try:
@@ -48,8 +49,24 @@ class SSHLogin:
     
     def sql_command(self, command):
         try:
-            self.ssh_prompt.append(f"\"{self.sql_prompt} {command}\"")
-            print(self.ssh_prompt)
+            self.ssh_prompt.append(f"\\\"{self.sql_prompt} {command}\\\"")
+
+            result = subprocess.run(self.ssh_prompt, capture_output=True, text=True)
+
+            if result.stdout:
+                print(result.stdout)
+            if result.stderr:
+                print("Error :")
+                print(result.stderr)
+
+            self.ssh_prompt.pop()
+
+        except Exception as e :
+            print(f"Error : {e}")
+
+    def sql_root_command(self, command):
+        try:
+            self.ssh_prompt.append(f"\\\"{self.sql_root} '{command}'\\\"")
 
             result = subprocess.run(self.ssh_prompt, capture_output=True, text=True)
 
@@ -75,3 +92,4 @@ if __name__ == "__main__" :
     cnx_ftp.ssh_command("ls -la")
     cnx_ftp.sudo_command("ls -la")
     cnx_mariaDB.sql_command("SHOW DATABASES;")
+    cnx_mariaDB.sql_root_command("SHOW DATABASES;")
