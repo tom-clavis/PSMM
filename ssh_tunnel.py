@@ -20,7 +20,7 @@ class SSHTunnelManager:
             ssh_password = self.ssh_password if self.ssh_password else None,
             ssh_pkey = self.ssh_key if self.ssh_key else None,
             remote_bind_address = ("172.0.0.1", remote_port),
-            local_bind_address = ("0.0.0.0", local_port)
+            local_bind_address = ("172.0.0.1", local_port)
         )
         self.tunnel.start()
 
@@ -104,6 +104,21 @@ if __name__ == "__main__":
     ssh_user = "hugo"
     ssh_key = "/home/hugo/.ssh/id-rsa"
 
-    remote_host = "172.0.0.1"
     remote_port = 3306
     local_port = 4000
+
+    db_user = "root"
+    db_password = "root"
+    db_name = "test"
+
+    ssh_tunnel_manager = SSHTunnelManager(ssh_user, ssh_host, ssh_port, ssh_key=ssh_key)
+    ssh_tunnel_manager.start_tunnel(remote_port, local_port)
+    ssh_tunnel_manager.connection_ssh()
+    ssh_tunnel_manager.execute_ssh_command("ls -l")
+    # ssh_tunnel_manager.sql_connect(db_user, db_password, db_name)
+    # ssh_tunnel_manager.execute_sql("INSERT INTO test_table (name) VALUES (%s)", ("Hugo",))
+    # result = ssh_tunnel_manager.sql_fetch("SELECT * FROM test_table")
+    # print(result)
+    # ssh_tunnel_manager.sql_disconnect()
+    ssh_tunnel_manager.close_ssh()
+    ssh_tunnel_manager.stop_tunnel()
