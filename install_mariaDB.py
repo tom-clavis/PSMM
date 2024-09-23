@@ -1,65 +1,119 @@
-# Description: This script installs MariaDB on the system.
+# Description: 
+#  - Ce script installe MariaDB sur un serveur distant 
+#  - sécurise MariaDB 
+#  - crée un utilisateur administrateur.
+ 
+# Suivez les étapes du script ssh_tunntl.py pour définir la clé ssh et les variables d'environnement.
+
+# Ensuite, exécutez le script install_mariaDB.py avec la commande suivante :
+# python3 install_mariaDB.py
+
+#-----------------------------------------------------------------------------------------------
+
+import ssh_tunnel
 import os
-import subprocess
-import command
 
+# Paramètres de connexion :
+# Remplacez les valeurs par les vôtres
 
-if __name__ == "__main__":
+# Adresse IP du serveur SSH, port SSH, nom d'utilisateur et clé SSH
+ssh_host = "192.168.1.22"
+ssh_port = 22
+ssh_user = "monitor"
+ssh_key = "/home/hugo/.ssh/id_rsa"
 
-    Server = "192.168.140.103"
+# Adresse IP du serveur MariaDB, port MariaDB et port local pour le tunnel SSH
+mariadb_host = '127.0.0.1'
+remote_port = 3306
+local_port = 4000
 
-    cnx = command.SSHLogin("monitor", Server)
-    try:
-    # install MariaDB
-        cnx.sudo_command("apt update -y")
-        cnx.sudo_command("apt install mariadb-server -y")
-        print("MariaDB installed")
-    
+# Identifiants de l'utilisateur root de MariaDB
+root_db = "root"
+root_db_password = os.getenv("MYSQL_ROOT_PASSWORD")
 
-    # secure MariaDB
-        cnx.sql_sudo_command("DELETE FROM mysql.user WHERE User='';")
-        print("Empty user removed")
+# Identifiant de l'utilisateur administrateur de MariaDB
+admin_db = "monitor"
+admin_db_password = os.getenv("MYSQL_ADMIN_PASSWORD")
 
+# -----------------------------------------------------------------------------------------------
 
-        cnx.sql_sudo_command("DROP DATABASE IF EXISTS test;")
-        print("Test database removed")
+# Création d'une instance de SSHTunnelManager
+tm = ssh_tunnel.SSHTunnelManager(ssh_user, ssh_host, ssh_port, ssh_key)
 
-        utilisateurs_test = cnx.sql_sudo_command("SELECT User Host FROM mysql.user WHERE Db='test';")
-        if utilisateurs_test:
-            for utilisateur in utilisateurs_test:
-                cnx.sql_sudo_command(f"REVOKE ALL PRIVILEGES, ON test.* FROM '{utilisateur}';")
-        print("Test user removed")
+# Connexion au serveur SSH
+tm.start_tunnel(mariadb_host, remote_port, local_port)
+tm.connect_ssh()
 
-        cnx.sql_sudo_command("FLUSH PRIVILEGES;")
-        print("Privileges flushed")
+#-----------------------------------------------------------------------------------------------
 
-    # restart MariaDB
-        cnx.sudo_command("systemctl restart mariadb")
-        print("MariaDB restarted")
+# Installation de MariaDB
+tm.sudo_command("apt update -y")
+tm.sudo_command("apt install mariadb-server -y")
 
-    # create an admin user
-        cnx.sql_sudo_command("CREATE USER 'monitor'@'localhost' IDENTIFIED BY 'monitor';")
-        print("Admin user created")
+#-----------------------------------------------------------------------------------------------
 
-        cnx.sql_sudo_command("GRANT ALL PRIVILEGES ON *.* TO 'monitor'@'localhost' WITH GRANT OPTION;")
-        print("Admin user granted")
+#Copie du script de sécurisation de MariaDB : mysql_secure_installation :
 
-        cnx.sql_sudo_command("ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';")
-        print("MariaDB root password changed")
+#-----------------------------------------------------------------------------------------------
 
-        cnx.sql_command("UPDATE mysql.user SET Host='localhost' WHERE User = 'root' AND Host != 'localhost';")
-        print("Disallow root login remotely")
+# Changement du mot de passe de l'utilisateur root
+tm.sudo_command(f'mariadb -e "ALTER USER \'root\'@\'localhost\' IDENTIFIED BY \'{root_db_password}\';"')
+print("Mot de passe de l'utilisateur root changé")
 
-        cnx.sql_sudo_command("FLUSH PRIVILEGES;")
-        print("Privileges flushed")
+#-----------------------------------------------------------------------------------------------
 
-        print("MariaDB secured")
-        print("MariaDB ready to use")
+# Connexion à la base de données en tant que root :
+tm.sql_connect(root_db, root_db_password) 
+print("Connexion à la base de données réussie")
 
-    except Exception as e:
-        print(f"Error : {e}")
-        print("MariaDB installation failed")
-        print("MariaDB not ready to use")
-        print("Please check the logs")
-        print("Exiting")
-        exit(1)
+# Suppression de l'utilisateur anonyme
+tm.execute_sql("DELETE FROM mysql.user WHERE User='';")
+print("Utilisateur anonyme supprimé")
+
+# Suppression de la base de données de test
+tm.execute_sql("DROP DATABASE IF EXISTS test;")
+print("Base de données de test supprimée")
+
+# Révocation des privilèges de la base de données de test
+users = tm.sql_fetch("SELECT User FROM mysql.user WHERE Db='test';") 
+if users:
+    for user in users:
+        tm.execute_sql(f"REVOKE ALL PRIVILEGES, ON test.* FROM '{user}';")
+    print("Privilèges de la base de données de test révoqués")
+
+# Création d'un utilisateur administrateur
+tm.execute_sql(f"CREATE USER '{admin_db}'@'localhost' IDENTIFIED BY '{admin_db_password}';")
+tm.execute_sql(f"GRANT ALL PRIVILEGES ON *.* TO '{admin_db}'@'localhost' WITH GRANT OPTION;")
+print("Utilisateur administrateur créé")
+tm.sql_disconnect()
+
+#-----------------------------------------------------------------------------------------------
+
+# Connexion à la base de données en tant que administrateur
+tm.sql_connect(admin_db, admin_db_password)
+
+# Blocage de la connexion de root à distance
+tm.execute_sql("UPDATE mysql.user SET Host='localhost' WHERE User = 'root' AND Host != 'localhost';")
+tm.execute_sql("FLUSH PRIVILEGES;")
+print("Connexion de root à distance interdite")
+
+tm.sql_disconnect()
+
+#-----------------------------------------------------------------------------------------------
+
+# Redémarrage de MariaDB
+print("Redémarrage de MariaDB")
+tm.sudo_command("systemctl restart mariadb")
+
+# Activation du service MariaDB au démarrage
+tm.sudo_command("systemctl enable mariadb")
+print("MariaDB activé au démarrage")
+
+#-----------------------------------------------------------------------------------------------
+
+# Fermeture de la connexion SSH et du tunnel
+tm.close_ssh()
+tm.stop_tunnel()
+
+print("MariaDB sécurisé")
+print("MariaDB prêt à l'emploi")
