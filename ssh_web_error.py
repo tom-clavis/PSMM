@@ -31,3 +31,11 @@ def get_logs_via_ssh():
     except Exception as e:
         print(f"Erreur lors de la connexion SSH : {e}")
     return logs
+
+
+def filter_access_errors(logs):
+    error_logs = []
+    for log in logs:
+        if "authentication failure" in log.lower() or "access denied" in log.lower():
+            error_logs.append(log.strip())
+    return error_logs
