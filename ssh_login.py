@@ -25,37 +25,32 @@
 import paramiko
 
 class ssh_connect:
-    def __init__(self, hostname, username, port, pkey):
+    def __init__(self, hostname, username, pkey, port=22):
         self.hostname = hostname
         self.username = username
         self.port = port
         self.pkey = pkey
 
-    def connect(self):
-        try:
-            # Créer un nouveau client SSH
-            self.client = paramiko.SSHClient()
+        # Créer un nouveau client SSH
+        self.ssh_client = paramiko.SSHClient()
 
-            # Charger les clés hôtes du système
-            self.client.load_system_host_keys()
+        # Charger les clés hôtes du système
+        self.ssh_client.load_system_host_keys()
 
-            # Connexion au serveur
-            # key_filename : Ajouter automatiquement la clé hôte du serveur depuis le fichier de clé privée
-            self.client.connect(
-                self.hostname,
-                self.port, 
-                self.username, 
-                key_filename=self.pkey
-                )
-            print(f'Connected to {self.hostname} as {self.username}')
+        # Connexion au serveur
+        # key_filename : Ajouter automatiquement la clé hôte du serveur depuis le fichier de clé privée
+        self.ssh_client.connect(
+            self.hostname,
+            self.port, 
+            self.username, 
+            key_filename=self.pkey
+            )
+        print(f'Connected to {self.hostname} as {self.username}')
 
-        except Exception as e:
-            print(f'Error: {e}')
-
-    def command(self, command):
+    def ssh_command(self, command):
         try:
             # Exécuter une commande shell
-            stdin, stdout, stderr = self.client.exec_command(command)
+            stdin, stdout, stderr = self.ssh_client.exec_command(command)
             stdout_output = stdout.read().decode('utf-8')
             stderr_output = stderr.read().decode('utf-8')
 
@@ -69,21 +64,18 @@ class ssh_connect:
 
     def close(self):
         # Fermer la connexion
-        self.client.close()
+        self.ssh_client.close()
         print('Connection closed.')
 
 if __name__ == '__main__':
     # Paramètres de connexion
-    hostname = '192.168.1.22'
+    hostname = '192.168.140.103'
     username = 'monitor'
-    command = 'ls -l'
-    port = 22
     pkey = '/home/hugo/.ssh/id_rsa'
 
     # Appeler la fonction
-    ssh = ssh_connect(hostname, username, port, pkey)
-    ssh.connect()
-    ssh.command(command)
+    ssh = ssh_connect(hostname, username, pkey)
+    ssh.ssh_command('ls -l')
     ssh.close()
 
 # Output

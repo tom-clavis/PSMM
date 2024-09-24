@@ -28,9 +28,10 @@
 # - MYSQL_ADMIN_PASSWORD : le mot de passe de l'utilisateur administrateur de MariaDB
 
 # pour cela, exécutez les commandes suivantes dans le terminal :
-# export SUDO_PASSWORD="mot_de_passe_administrateur"
-# export MYSQL_ROOT_PASSWORD="mot_de_passe_root"
-# export MYSQL_ADMIN_PASSWORD="mot_de_passe_administrateur_mariadb"
+# export SUDO_PASSWORD="mot_de_passe_administrateur" >> ~/.bashrc
+# export MYSQL_ROOT_PASSWORD="mot_de_passe_root" >> ~/.bashrc
+# export MYSQL_ADMIN_PASSWORD="mot_de_passe_administrateur_mariadb" >> ~/.bashrc
+# source ~/.bashrc
 
 # Le tunnel SSH est un moyen sécurisé de se connecter à un serveur distant et d'accéder à des ressources distantes.
 # Il permet de chiffrer les données échangées entre le client et le serveur, ce qui les rend plus sécurisées.
@@ -188,12 +189,12 @@ class SSHTunnelManager:
 
 # Exemple d'utilisation
 if __name__ == "__main__":
-    ssh_host = "192.168.1.22"
+    ssh_host = '192.168.140.103' # ou "192.168.1.22"
     ssh_port = 22
     ssh_user = "monitor"
     key = "/home/hugo/.ssh/id_rsa"
 
-    remote_host = "127.0.0.1" # Localhost car le serveur MySQL est sur la même machine que le serveur SSH
+    remote_host = "127.0.0.1" # Localhost car tunnel SSH
     remote_port = 3306
     local_port = 8080
 

@@ -1,18 +1,25 @@
 import mysql.connector
 from sshtunnel import SSHTunnelForwarder
+import os
 
-class MariaDBSSHConnection:
-    def __init__(self, ssh_host, ssh_user, ssh_key, mariadb_host, ssh_port=22):
+class SSHTunnelConnection:
+    def __init__(self, ssh_host, ssh_user, ssh_key, ssh_port=22):
+        self.ssh_host=ssh_host
+        self.ssh_user=ssh_user
+        self.ssh_port=ssh_port
+        self.ssh_key=ssh_key
+        self.active_tunnel=[]
+
+    def tunnel_connect(self, remote_host, remote_port, local_port):
         # Initialisation du tunnel SSH
         self.server = SSHTunnelForwarder(
-            (ssh_host, ssh_port),
+            (self.ssh_host, self.ssh_port),
             ssh_username=ssh_user,
             ssh_pkey=ssh_key,
-            remote_bind_address=(mariadb_host, 3306)  # Bind sur l'adresse IP de la machine MariaDB
+            remote_bind_address=(remote_host, remote_port),  # Bind sur l'adresse IP de la machine MariaDB
+            local_bind_address=('127.0.0.1', local_port)
         )
 
-    def start_ssh_tunnel(self):
-        # Démarrer le tunnel SSH
         self.server.start()
         print(f"Tunnel SSH ouvert sur le port local {self.server.local_bind_port}")
 
@@ -20,15 +27,25 @@ class MariaDBSSHConnection:
         # Arrêter le tunnel SSH
         self.server.stop()
 
-    def sql_connect(self, db_user, db_password):
+class MySQL:
+    def __init__(self, db_user, db_password, local_port, db_name=None, db_table=None):
+        self.db_user=db_user
+        self.db_password=db_password
+        self.db_name=db_name
+        self.db_table=db_table
+        self.local_port=local_port
+
         # Connexion à la base de données via le tunnel SSH
         self.sql_connection = mysql.connector.connect(
             host='127.0.0.1',  # On continue d'utiliser localhost côté client car on passe par le tunnel SSH
-            port=self.server.local_bind_port,  # Port local du tunnel SSH
-            user=db_user,
-            password=db_password
+            port=self.local_port,  # Port local du tunnel SSH
+            user=self.db_user,
+            password=self.db_password
         )
         self.cursor = self.sql_connection.cursor()
+
+        if db_name:
+            self.cursor.execute(f"USE {db_name}")
 
     def execute_sql(self, sql_query):
         # Exécution d'une requête SQL
@@ -46,40 +63,47 @@ class MariaDBSSHConnection:
         self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
         print(f"Base de données '{db_name}' créée avec succès.")
 
+    def insert_logs(self,username, date, time, ipaddress):
+        if self.db_name and self.db_table:
+            self.execute_sql(f"INSERT INTO {self.db_table} (account, date, heure, IP) VALUES ('{username}', '{date}', '{time}', '{ipaddress}');")
+        else:
+            print("Selectionner une base de données et une table")
+
     def close_connection(self):
         # Fermeture des connexions
         if self.sql_connection:
             self.sql_connection.close()
-        if self.server:
-            self.server.stop()
 
 # Exemple d'utilisation
 if __name__ == "__main__":
-    ssh_host = '192.168.1.22'
+    ssh_host = '192.168.140.103' # ou '192.168.1.22'
     ssh_user = 'monitor'
     ssh_key = '/home/hugo/.ssh/id_rsa'
     
-    mariadb_host = '127.0.0.1'  # Adresse IP de la machine où MariaDB est installé
+    remote_host = '127.0.0.1'  # Adresse IP de la machine où MariaDB est installé
+    remote_port=3306
+    local_port=4000
+    
+    
     db_user = 'monitor'
-    db_password = 'root'
-    db_name = 'NewDatabase'
+    db_password = os.getenv("MYSQL_ADMIN_PASSWORD")
+    db_name = 'ErrorLog'
+    db_table = 'ErrorLogMariaDB'
 
     # Création de l'objet de connexion
-    mariadb_conn = MariaDBSSHConnection(ssh_host, ssh_user, ssh_key, mariadb_host)
+    mariadb_tunnel = SSHTunnelConnection(ssh_host, ssh_user, ssh_key)
     
     # Démarrer le tunnel SSH
-    mariadb_conn.start_ssh_tunnel()
+    mariadb_tunnel.tunnel_connect(remote_host, remote_port, local_port)
+
+    # Création de l'objet de connection a la base de données
+    logMariaDB=MySQL(db_user, db_password, local_port, db_name, db_table)
 
     try:
-        # Connexion à MariaDB
-        mariadb_conn.sql_connect(db_user, db_password)
+        logs=logMariaDB.fetch_data(f"SELECT * FROM ErrorLogMariaDB")
+        print(logs)
 
-        # Créer la base de données
-        mariadb_conn.create_database(db_name)
-
-        # Exécuter une requête SQL
-        result = mariadb_conn.fetch_data(f"SHOW DATABASES;")
-        print(result)
     finally:
         # Fermeture de la connexion
-        mariadb_conn.close_connection()
+        logMariaDB.close_connection()
+        mariadb_tunnel.stop_ssh_tunnel()
