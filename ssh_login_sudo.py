@@ -69,7 +69,8 @@ if __name__ == '__main__':
 
     # Appeler la fonction
     ssh = ssh_connect_sudo(hostname, username, pkey)
-    ssh.sudo_command('cat /etc/gshadow')
+    result = ssh.sudo_command('ls -l')
+    print(result)
     ssh.close()
 
 # Output

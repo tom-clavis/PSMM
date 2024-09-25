@@ -28,9 +28,9 @@
 # - MYSQL_ADMIN_PASSWORD : le mot de passe de l'utilisateur administrateur de MariaDB
 
 # pour cela, exécutez les commandes suivantes dans le terminal :
-# export SUDO_PASSWORD="mot_de_passe_administrateur" >> ~/.bashrc
-# export MYSQL_ROOT_PASSWORD="mot_de_passe_root" >> ~/.bashrc
-# export MYSQL_ADMIN_PASSWORD="mot_de_passe_administrateur_mariadb" >> ~/.bashrc
+# echo export SUDO_PASSWORD="mot_de_passe_administrateur" >> ~/.bashrc
+# echo export MYSQL_ROOT_PASSWORD="mot_de_passe_root" >> ~/.bashrc
+# echo export MYSQL_ADMIN_PASSWORD="mot_de_passe_administrateur_mariadb" >> ~/.bashrc
 # source ~/.bashrc
 
 # Le tunnel SSH est un moyen sécurisé de se connecter à un serveur distant et d'accéder à des ressources distantes.

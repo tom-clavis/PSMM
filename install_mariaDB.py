@@ -17,7 +17,7 @@ import os
 # Remplacez les valeurs par les vôtres
 
 # Adresse IP du serveur SSH, port SSH, nom d'utilisateur et clé SSH
-ssh_host = "192.168.1.22"
+ssh_host = "192.168.140.103"
 ssh_port = 22
 ssh_user = "monitor"
 ssh_key = "/home/hugo/.ssh/id_rsa"
@@ -29,7 +29,7 @@ local_port = 4000
 
 # Identifiants de l'utilisateur root de MariaDB
 root_db = "root"
-root_db_password = os.getenv("MYSQL_ROOT_PASSWORD")
+root_db_password = os.getenv("MSQL_ROOT_PASSWORD")
 
 # Identifiant de l'utilisateur administrateur de MariaDB
 admin_db = "monitor"
@@ -40,15 +40,17 @@ admin_db_password = os.getenv("MYSQL_ADMIN_PASSWORD")
 # Création d'une instance de SSHTunnelManager
 tm = ssh_tunnel.SSHTunnelManager(ssh_user, ssh_host, ssh_port, ssh_key)
 
-# Connexion au serveur SSH
+# Connexion au serveur MariaDB
 tm.start_tunnel(mariadb_host, remote_port, local_port)
 tm.connect_ssh()
 
 #-----------------------------------------------------------------------------------------------
 
 # Installation de MariaDB
-tm.sudo_command("apt update -y")
+tm.sudo_command("apt update")
+print("fin de l'update")
 tm.sudo_command("apt install mariadb-server -y")
+print("fin de l'installation de MariaDB")
 
 #-----------------------------------------------------------------------------------------------
 

@@ -3,7 +3,7 @@ import ssh_tunnel
 # Paramètres de connexion :
 
 # Adresse IP du serveur SSH, port SSH, nom d'utilisateur et clé SSH
-ssh_host = "192.168.1.22"
+ssh_host = "192.168.140.103"
 ssh_port = 22
 ssh_user = "monitor"
 ssh_key = "/home/hugo/.ssh/id_rsa"
@@ -26,7 +26,7 @@ tm.connect_ssh()
 #-----------------------------------------------------------------------------------------------
 
 # Création de la base de données ErrorLog
-tm.sql_connect(admin_db)
+tm.sql_connect(admin_db, "monitor")
 tm.execute_sql("CREATE DATABASE IF NOT EXISTS ErrorLog;")
 print("Base de données 'ErrorLog' créée avec succès.")
 
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS ErrorLogMariaDB (
     id INT AUTO_INCREMENT PRIMARY KEY,
     account VARCHAR(255),
     date DATE,
-    heure TIME,
+    time TIME,
     IP VARCHAR(255)
 );
 """)
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS ErrorLogFTP (
     id INT AUTO_INCREMENT PRIMARY KEY,
     account VARCHAR(255),
     date DATE,
-    heure TIME,
+    time TIME,
     IP VARCHAR(255)
 );
 """)
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS ErrorLogWeb (
     id INT AUTO_INCREMENT PRIMARY KEY,
     account VARCHAR(255),
     date DATE,
-    heure TIME,
+    time TIME,
     IP VARCHAR(255)
 );
 """)
@@ -81,3 +81,4 @@ for table in show_tables:
 # Fermeture de la connexion SSH
 tm.sql_disconnect()
 tm.close_ssh()
+tm.stop_tunnel()

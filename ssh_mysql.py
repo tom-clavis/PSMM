@@ -8,15 +8,14 @@ class SSHTunnelConnection:
         self.ssh_user=ssh_user
         self.ssh_port=ssh_port
         self.ssh_key=ssh_key
-        self.active_tunnel=[]
 
     def tunnel_connect(self, remote_host, remote_port, local_port):
         # Initialisation du tunnel SSH
         self.server = SSHTunnelForwarder(
             (self.ssh_host, self.ssh_port),
-            ssh_username=ssh_user,
-            ssh_pkey=ssh_key,
-            remote_bind_address=(remote_host, remote_port),  # Bind sur l'adresse IP de la machine MariaDB
+            ssh_username=self.ssh_user,
+            ssh_pkey=self.ssh_key,
+            remote_bind_address=(remote_host, remote_port),
             local_bind_address=('127.0.0.1', local_port)
         )
 
@@ -80,9 +79,9 @@ if __name__ == "__main__":
     ssh_user = 'monitor'
     ssh_key = '/home/hugo/.ssh/id_rsa'
     
-    remote_host = '127.0.0.1'  # Adresse IP de la machine où MariaDB est installé
-    remote_port=3306
-    local_port=4000
+    remote_host = '127.0.0.1'  # Localhost car on utilise un tunnel SSH
+    remote_port=3306 # Le port de mariadb sur la machine distante
+    local_port=4000 # On choisir un port sur la machine qui lance le script
     
     
     db_user = 'monitor'
