@@ -9,13 +9,13 @@ class SSHTunnelConnection:
         self.ssh_port=ssh_port
         self.ssh_key=ssh_key
 
-    def tunnel_connect(self, remote_host, remote_port, local_port):
+    def tunnel_connect(self, remote_port, local_port):
         # Initialisation du tunnel SSH
         self.server = SSHTunnelForwarder(
             (self.ssh_host, self.ssh_port),
             ssh_username=self.ssh_user,
             ssh_pkey=self.ssh_key,
-            remote_bind_address=(remote_host, remote_port),
+            remote_bind_address=('127.0.0.1', remote_port),
             local_bind_address=('127.0.0.1', local_port)
         )
 
@@ -57,14 +57,11 @@ class MySQL:
         result = self.cursor.fetchall()
         return result
 
-    def create_database(self, db_name):
-        # Création de la base de données
-        self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
-        print(f"Base de données '{db_name}' créée avec succès.")
-
     def insert_logs(self,username, date, time, ipaddress):
         if self.db_name and self.db_table:
-            self.execute_sql(f"INSERT INTO {self.db_table} (account, date, heure, IP) VALUES ('{username}', '{date}', '{time}', '{ipaddress}');")
+            self.execute_sql(
+                f"INSERT INTO {self.db_table} (account, date, heure, IP) VALUES ('{username}', '{date}', '{time}', '{ipaddress}');"
+                )
         else:
             print("Selectionner une base de données et une table")
 
@@ -79,7 +76,6 @@ if __name__ == "__main__":
     ssh_user = 'monitor'
     ssh_key = '/home/hugo/.ssh/id_rsa'
     
-    remote_host = '127.0.0.1'  # Localhost car on utilise un tunnel SSH
     remote_port=3306 # Le port de mariadb sur la machine distante
     local_port=4000 # On choisir un port sur la machine qui lance le script
     
@@ -93,7 +89,7 @@ if __name__ == "__main__":
     mariadb_tunnel = SSHTunnelConnection(ssh_host, ssh_user, ssh_key)
     
     # Démarrer le tunnel SSH
-    mariadb_tunnel.tunnel_connect(remote_host, remote_port, local_port)
+    mariadb_tunnel.tunnel_connect(remote_port, local_port)
 
     # Création de l'objet de connection a la base de données
     logMariaDB=MySQL(db_user, db_password, local_port, db_name, db_table)

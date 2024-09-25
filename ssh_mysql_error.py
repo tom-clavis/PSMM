@@ -11,8 +11,7 @@ ssh_port = 22
 ssh_user = "monitor"
 ssh_key = "/home/hugo/.ssh/id_rsa"
 
-# Adresse IP du serveur MariaDB, port MariaDB et port local pour le tunnel SSH
-mariadb_host = '127.0.0.1'
+# Port MariaDB et port local pour le tunnel SSH
 remote_port = 3306
 local_port = 4000
 
@@ -37,7 +36,7 @@ data = re.findall(pattern, logs)
 tm = ssh_mysql.SSHTunnelConnection(ssh_host, ssh_user, ssh_key, ssh_port)
 
 # Insertion des logs dans la base de données
-tm.tunnel_connect(mariadb_host, remote_port, local_port)
+tm.tunnel_connect(remote_port, local_port)
 sqlm = ssh_mysql.MySQL(admin_db, admin_password, local_port, db_name, db_table)
 sqlm.execute_sql(f"USE {db_name};")
 
@@ -45,7 +44,7 @@ for date, time, username, ipaddress in data:
     check = sqlm.fetch_data(f"SELECT COUNT(*) FROM {db_table} WHERE account = '{username}' AND date = '{date}' AND time = '{time}' AND IP = '{ipaddress}';")
 
     if check[0][0] == 0:
-        sqlm.execute_sql(f"INSERT INTO {db_table} (account, date, time, IP) VALUES ('{username}', '{date}', '{time}', '{ipaddress}');")
+        sqlm.insert_logs(username, date, time, ipaddress)
         print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
 
 sqlm.close_connection()
