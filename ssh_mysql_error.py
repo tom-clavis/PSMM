@@ -42,11 +42,12 @@ sqlm = ssh_mysql.MySQL(admin_db, admin_password, local_port, db_name, db_table)
 sqlm.execute_sql(f"USE {db_name};")
 
 for date, time, username, ipaddress in data:
-    check = sqlm.fetch_data(f"SELECT COUNT(*) FROM {db_table} WHERE account = {username}  AND date = {date} AND time = {time} AND IP = {ipaddress};")
-    if not check :
+    check = sqlm.fetch_data(f"SELECT COUNT(*) FROM {db_table} WHERE account = '{username}' AND date = '{date}' AND time = '{time}' AND IP = '{ipaddress}';")
+
+    if check[0][0] == 0:
         sqlm.execute_sql(f"INSERT INTO {db_table} (account, date, time, IP) VALUES ('{username}', '{date}', '{time}', '{ipaddress}');")
         print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
 
 sqlm.close_connection()
-print("Logs insérés avec succès.")
+print("Fin de la connection")
 #-----------------------------------------------------------------------------------------------
