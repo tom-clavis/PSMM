@@ -48,5 +48,6 @@ for date, time, username, ipaddress in data:
         print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
 
 sqlm.close_connection()
+tm.stop_ssh_tunnel()
 print("Fin de la connection")
 #-----------------------------------------------------------------------------------------------

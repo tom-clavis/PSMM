@@ -1,7 +1,7 @@
 import ssh_login_sudo
 import ssh_mysql
-import re
 import os
+import re
 from datetime import datetime
 
 # Paramètres de connexion :
@@ -24,23 +24,23 @@ local_port = 4000
 admin_db = "monitor"
 admin_password = os.getenv("MYSQL_ADMIN_PASSWORD")
 db_name = "ErrorLog"
-db_table = "ErrorLogFTP"
+db_table = "ErrorLogWeb"
 
 # ---------------------------------------------------------------------
 
-# Adresse IP du serveur FTP
-ftp_host = "192.168.140.101"
+# Adresse IP du serveur Web
+web_host = "192.168.140.102"
 
 # ---------------------------------------------------------------------
 
 # Création d'un client SSH
-ftp_client = ssh_login_sudo.ssh_connect_sudo(ftp_host, ssh_user, ssh_key, ssh_port)
+ftp_client = ssh_login_sudo.ssh_connect_sudo(web_host, ssh_user, ssh_key, ssh_port)
 
 # récupération des log
-logs = ftp_client.sudo_command("cat /var/log/vsftpd.log | grep 'FAIL LOGIN'")
+logs = ftp_client.sudo_command("grep auth_basic:error /var/log/apache2/error.log | sed 's/\]//g' |awk '{print $5, $2, $3, $4, $14, $11}'")
 ftp_client.close()
 
-pattern = r'^(\w{3}\s+\w{3}\s+\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{4})\s+\[pid\s+\d+\]\s+\[(\w+)\].*Client\s+"([\d\.]+)"'
+pattern = r"(\d{4} \w{3} \d{2}) (\d{2}:\d{2}:\d{2})\.\d+\s+(\w+)\s+(\d+\.\d+\.\d+.\d+):\d+"
 data = re.findall(pattern, logs, re.MULTILINE)
 
 # Création d'une instance de SSHTunnelManager
@@ -52,14 +52,12 @@ sqlm = ssh_mysql.MySQL(admin_db, admin_password, local_port, db_name, db_table)
 sqlm.execute_sql(f"USE {db_name};")
 
 for match in data:
-    date = match[0]     # Date sans l'année
-    time = match[1]     # Heure
-    year = match[2]     # Année
-    username = match[3]     # Nom d'utilisateur
-    ipaddress = match[4]       # Adresse IP
+    date = match[0]
+    time = match[1]
+    username = match[2]
+    ipaddress = match[3]
 
-    date_str = f"{date} {year}"
-    date_object = datetime.strptime(date_str, "%a %b %d %Y")
+    date_object = datetime.strptime(date, "%Y %b %d")
     date = datetime.strftime(date_object, "%Y-%m-%d")
 
     check = sqlm.fetch_data(f"SELECT COUNT(*) FROM {db_table} WHERE account = '{username}' AND date = '{date}' AND time = '{time}' AND IP = '{ipaddress}';")
@@ -69,5 +67,5 @@ for match in data:
         print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
 
 sqlm.close_connection()
-tm.stop_ssh_tunnel()
 print("Fin de la connection")
+
