@@ -72,7 +72,7 @@ class MySQL:
 
 # Exemple d'utilisation
 if __name__ == "__main__":
-    ssh_host = '192.168.140.103' # ou '192.168.1.22'
+    ssh_host = '192.168.140.103' # Adresse IP de la base de donnée
     ssh_user = 'monitor'
     ssh_key = '/home/hugo/.ssh/id_rsa'
     
