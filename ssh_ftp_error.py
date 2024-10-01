@@ -65,7 +65,7 @@ for match in data:
     check = sqlm.fetch_data(f"SELECT COUNT(*) FROM {db_table} WHERE account = '{username}' AND date = '{date}' AND time = '{time}' AND IP = '{ipaddress}';")
 
     if check[0][0] == 0:
-        sqlm.insert_logs(username, date, time, ipaddress)
+        sqlm.insert_logs(db_table, username, date, time, ipaddress)
         print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
 
 sqlm.close_connection()

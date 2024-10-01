@@ -32,7 +32,7 @@ class EmailSender:
             message["Subject"] = subject
 
             # Attacher le corps de l'e-mail
-            message.attach(MIMEText(body, "plain"))
+            message.attach(MIMEText(body, "html"))
 
             # Envoyer l'e-mail
             self.server.sendmail(self.sender_email, receiver_email, message.as_string())

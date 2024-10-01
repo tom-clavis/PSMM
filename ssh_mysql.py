@@ -57,10 +57,10 @@ class MySQL:
         result = self.cursor.fetchall()
         return result
 
-    def insert_logs(self,username, date, time, ipaddress):
-        if self.db_name and self.db_table:
+    def insert_logs(self,db_table, username, date, time, ipaddress):
+        if self.db_name and db_table:
             self.execute_sql(
-                f"INSERT INTO {self.db_table} (account, date, time, IP) VALUES ('{username}', '{date}', '{time}', '{ipaddress}');"
+                f"INSERT INTO {db_table} (account, date, time, IP) VALUES ('{username}', '{date}', '{time}', '{ipaddress}');"
                 )
         else:
             print("Selectionner une base de données et une table")
