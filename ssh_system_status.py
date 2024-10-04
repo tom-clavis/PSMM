@@ -1,6 +1,7 @@
 import os
 import ssh_login_sudo
 import ssh_mysql
+from datetime import datetime, timedelta
 
 # Paramètres de connexion :
 
@@ -68,3 +69,11 @@ for server, data in usages.items():
             '{data["disk"]}'
             );"
             )
+        
+limit_date = datetime.now() - timedelta(hours=72)
+limit = limit_date.strftime('%Y-%m-%d %H:%M:%S')
+
+sqlm.execute_sql("DELETE FROM Usage WHERE datetime < ?", (limit,))
+
+sqlm.close_connection
+tm.stop_ssh_tunnel
