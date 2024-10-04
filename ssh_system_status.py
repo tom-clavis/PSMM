@@ -66,7 +66,7 @@ for server, data in usages.items():
             NOW(), 
             '{data["cpu"]}', 
             '{data["ram"]}', 
-            '{data["disk"]}'
+            '{data["hd"]}'
             );"""
             )
         
