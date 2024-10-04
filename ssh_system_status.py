@@ -42,7 +42,7 @@ for server in servers:
     try:
         client = ssh_login_sudo.ssh_connect(server, ssh_user, ssh_key)
         cpu_usage = client.ssh_command("top -bn2 | grep 'Cpu(s)' | awk '{print $2+$4}' | tail -n1")
-        ram_usage = client.ssh_command("top -bn2 | grep 'MiB Mem' | awk '{print $8*100/$4}' | tail -n1")
+        ram_usage = client.ssh_command("top -bn2 | grep 'MiB Mem' | awk '{print $8*100/$4}' | tail -n1 | sed 's/..$//'")
         hd_usage = client.ssh_command("df -h | grep '/dev/sda1' | awk '{print $5}' | sed 's/%//g'")
 
         usages[server] = {"cpu": cpu_usage, "ram": ram_usage, "hd": hd_usage}
@@ -60,20 +60,24 @@ for server, data in usages.items():
     if "error" in data:
         print(f"Erreur pour {server}: {data['error']}")
     else:
+        cpu = str(data["cpu"]).replace(',', '.')
+        ram = str(data["ram"]).replace(',', '.')
+        hd = str(data["hd"]).replace(',', '.')
         sqlm.execute_sql(
             f"""INSERT INTO Usages (ip, datetime, cpu, ram, disk) VALUES 
             ('{server}', 
             NOW(), 
-            '{data["cpu"]}', 
-            '{data["ram"]}', 
-            '{data["hd"]}'
+            '{cpu}', 
+            '{ram}', 
+            '{hd}'
             );"""
             )
         
 limit_date = datetime.now() - timedelta(hours=72)
 limit = limit_date.strftime('%Y-%m-%d %H:%M:%S')
 
-sqlm.execute_sql("DELETE FROM Usage WHERE datetime < ?", (limit,))
+sqlm.cursor.execute(f"DELETE FROM Usages WHERE datetime < %s", (limit,))
+sqlm.sql_connection.commit()
 
 sqlm.close_connection
 tm.stop_ssh_tunnel
