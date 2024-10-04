@@ -61,13 +61,13 @@ for server, data in usages.items():
         print(f"Erreur pour {server}: {data['error']}")
     else:
         sqlm.execute_sql(
-            f"INSERT INTO Usages (ip, datetime, cpu, ram, disk) VALUES 
+            f"""INSERT INTO Usages (ip, datetime, cpu, ram, disk) VALUES 
             ('{server}', 
             NOW(), 
             '{data["cpu"]}', 
             '{data["ram"]}', 
             '{data["disk"]}'
-            );"
+            );"""
             )
         
 limit_date = datetime.now() - timedelta(hours=72)

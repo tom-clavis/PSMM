@@ -41,11 +41,11 @@ sqlm = ssh_mysql.MySQL(admin_db, admin_password, local_port, db_name, db_table)
 
 for date, time, username, ipaddress in data:
     check = sqlm.fetch_data(
-        f"SELECT COUNT(*) FROM {db_table} 
+        f"""SELECT COUNT(*) FROM {db_table} 
         WHERE account = '{username}' 
         AND date = '{date}' 
         AND time = '{time}' 
-        AND IP = '{ipaddress}';")
+        AND IP = '{ipaddress}';""")
 
     if check[0][0] == 0:
         sqlm.insert_logs(db_table, username, date, time, ipaddress)
