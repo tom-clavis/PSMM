@@ -14,7 +14,7 @@ ssh_key = "/home/hugo/.ssh/id_rsa"
 # ---------------------------------------------------------------------
 
 # Adresse IP du serveur MariaDB
-mariadb_host = "192.168.1.103"
+mariadb_host = "192.168.140.103"
 
 # Port MariaDB et port local pour le tunnel SSH
 remote_port = 3306
@@ -31,10 +31,10 @@ mariadb_table = "ErrorLogMariaDB"
 # ---------------------------------------------------------------------
 
 # Adresse IP du serveur Web
-web_host = "192.168.1.102"
+web_host = "192.168.140.102"
 
 # Adresse IP du serveur FTP
-ftp_host = "192.168.1.101"
+ftp_host = "192.168.140.101"
 
 # ---------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ web_client = ssh_login_sudo.ssh_connect_sudo(ftp_host, ssh_user, ssh_key, ssh_po
 
 # récupération des log
 logs = web_client.sudo_command("cat /var/log/vsftpd.log | grep 'FAIL LOGIN'")
-ftp_client.close()
+web_client.close()
 if logs:
     pattern = r'^(\w{3}\s+\w{3}\s+\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{4})\s+\[pid\s+\d+\]\s+\[(\w+)\].*Client\s+"([\d\.]+)"'
     log_ftp = re.findall(pattern, logs, re.MULTILINE)
@@ -66,10 +66,10 @@ else:
 
 # Récupération des logs d'erreurs de connection à MariaDB
 # Création d'un client SSH
-client = ssh_login_sudo.ssh_connect_sudo(mariadb_host, ssh_user, ssh_key, ssh_port)
+mariadb_client = ssh_login_sudo.ssh_connect_sudo(mariadb_host, ssh_user, ssh_key, ssh_port)
 
-logs = client.sudo_command("journalctl -u mariadb | grep 'Access denied'")
-client.close()
+logs = mariadb_client.sudo_command("journalctl -u mariadb | grep 'Access denied'")
+mariadb_client.close()
 if logs:
     pattern = r"(?P<date>\d{4}-\d{2}-\d{2}) (?P<time>\d{2}:\d{2}:\d{2}) \d+ \[Warning\] Access denied for user '(?P<username>\w+)'@'(?P<ipaddress>\w+.\w+.\w+.\w+)'"
     log_mariadb = re.findall(pattern, logs)
@@ -102,7 +102,7 @@ for match in log_web:
 
     if check[0][0] == 0:
         sqlm.insert_logs(web_table, username, date, time, ipaddress)
-        print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
+        print(f"[Insertion table web] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
 
 # ---------------------------------------------------------------------
 
@@ -122,7 +122,7 @@ for match in log_ftp:
 
     if check[0][0] == 0:
         sqlm.insert_logs(ftp_table, username, date, time, ipaddress)
-        print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
+        print(f"[Insertion table ftp] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
 
 # ---------------------------------------------------------------------
 
@@ -132,7 +132,7 @@ for date, time, username, ipaddress in log_mariadb:
 
     if check[0][0] == 0:
         sqlm.insert_logs(mariadb_table, username, date, time, ipaddress)
-        print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
+        print(f"[Insertion table Mariadb] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
 
 # ---------------------------------------------------------------------
 

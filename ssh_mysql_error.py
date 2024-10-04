@@ -38,10 +38,14 @@ tm = ssh_mysql.SSHTunnelConnection(ssh_host, ssh_user, ssh_key, ssh_port)
 # Insertion des logs dans la base de données
 tm.tunnel_connect(remote_port, local_port)
 sqlm = ssh_mysql.MySQL(admin_db, admin_password, local_port, db_name, db_table)
-sqlm.execute_sql(f"USE {db_name};")
 
 for date, time, username, ipaddress in data:
-    check = sqlm.fetch_data(f"SELECT COUNT(*) FROM {db_table} WHERE account = '{username}' AND date = '{date}' AND time = '{time}' AND IP = '{ipaddress}';")
+    check = sqlm.fetch_data(
+        f"SELECT COUNT(*) FROM {db_table} 
+        WHERE account = '{username}' 
+        AND date = '{date}' 
+        AND time = '{time}' 
+        AND IP = '{ipaddress}';")
 
     if check[0][0] == 0:
         sqlm.insert_logs(db_table, username, date, time, ipaddress)

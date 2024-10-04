@@ -55,7 +55,7 @@ class ssh_connect:
             stderr_output = stderr.read().decode('utf-8')
 
             if stdout_output:
-                print(stdout_output)
+                return stdout_output
             if stderr_output:
                 print(f'STDERR: {stderr_output}')
 

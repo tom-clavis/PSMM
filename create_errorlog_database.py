@@ -46,7 +46,6 @@ CREATE TABLE IF NOT EXISTS ErrorLogMariaDB (
 print("Table 'ErrorLogMariaDB' créée avec succès.")
 
 # Création de la table ErrorLogFTP
-tm.execute_sql("USE ErrorLog;")
 tm.execute_sql("""
 CREATE TABLE IF NOT EXISTS ErrorLogFTP (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -59,7 +58,6 @@ CREATE TABLE IF NOT EXISTS ErrorLogFTP (
 print("Table 'ErrorLogFTP' créée avec succès.")
 
 # Création de la table ErrorLogWeb
-tm.execute_sql("USE ErrorLog;")
 tm.execute_sql("""
 CREATE TABLE IF NOT EXISTS ErrorLogWeb (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -71,7 +69,18 @@ CREATE TABLE IF NOT EXISTS ErrorLogWeb (
 """)
 print("Table 'ErrorLogWeb' créée avec succès.")
 
-tm.execute_sql("USE ErrorLog;")
+tm.execute_sql("""
+CREATE TABLE IF NOT EXISTS Usages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip VARCHAR(255),
+    datetime DATETIME,
+    cpu DECIMAL(5, 2),
+    ram DECIMAL(5, 2)
+    disk DECIMAL(5, 2)
+);
+""")
+print("Table 'Usages' créée avec succès.")
+
 show_tables = tm.sql_fetch("SHOW TABLES;")
 for table in show_tables:
     print(table)

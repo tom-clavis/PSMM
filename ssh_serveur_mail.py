@@ -33,7 +33,7 @@ ssh_key = '/home/hugo/.ssh/id_rsa'
 # ----------------------------------------------------------------------
 
 # Adresse IP du serveur MariaDB
-mariadb_host = "192.168.1.103"
+mariadb_host = "192.168.140.103"
 
 remote_port=3306 # Le port de mariadb sur la machine distante
 local_port=4000 # On choisir un port sur la machine qui lance le script

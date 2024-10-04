@@ -5,7 +5,7 @@ from ssh_login_sudo import ssh_connect_sudo
 
 # Récupération des logs dans la base de donées
 
-# lancer le scritp log.py (version fini)
+
 
 # -----------------------------------------------------------------------
 
