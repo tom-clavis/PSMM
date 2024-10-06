@@ -4,10 +4,6 @@ import subprocess
 import os
 import ssh_mysql
 
-# Copy the webhook URL from the Chat space where the webhook is registered.
-# The values for SPACE_ID, KEY, and TOKEN are set by Chat, and are included
-# when you copy the webhook URL.
-
 def main(message):
     """Google Chat incoming webhook quickstart."""
     url = "https://chat.googleapis.com/v1/spaces/AAAAv4OBpN0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=R7w7Txc_S4jDnA5iiUoBugYCFxfWiz3Xrkc9P07WESg"
