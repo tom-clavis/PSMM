@@ -1,4 +1,3 @@
-import paramiko
 import ssh_login_sudo
 import send_mail
 import os

@@ -3,7 +3,6 @@ from httplib2 import Http
 import subprocess
 import os
 import ssh_mysql
-import datetime
 
 # Copy the webhook URL from the Chat space where the webhook is registered.
 # The values for SPACE_ID, KEY, and TOKEN are set by Chat, and are included

@@ -10,7 +10,7 @@
 
 #-----------------------------------------------------------------------------------------------
 
-import ssh_tunnel
+import test.ssh_tunnel as ssh_tunnel
 import os
 
 # Paramètres de connexion :
