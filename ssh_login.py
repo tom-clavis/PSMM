@@ -51,8 +51,8 @@ class ssh_connect:
         try:
             # Exécuter une commande shell
             stdin, stdout, stderr = self.ssh_client.exec_command(command)
-            stdout_output = stdout.read().decode('utf-8')
-            stderr_output = stderr.read().decode('utf-8')
+            stdout_output = stdout.read().decode('utf-8').strip()
+            stderr_output = stderr.read().decode('utf-8').strip()
 
             if stdout_output:
                 return stdout_output

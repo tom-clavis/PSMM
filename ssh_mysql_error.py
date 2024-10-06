@@ -30,28 +30,30 @@ logs = client.sudo_command("journalctl -u mariadb | grep 'Access denied'")
 client.close()
 
 pattern = r"(?P<date>\d{4}-\d{2}-\d{2}) (?P<time>\d{2}:\d{2}:\d{2}) \d+ \[Warning\] Access denied for user '(?P<username>\w+)'@'(?P<ipaddress>\w+.\w+.\w+.\w+)'"
-data = re.findall(pattern, logs)
+data = []
+if logs:
+    data = re.findall(pattern, logs)
+if data:
+    # Création d'une instance de SSHTunnelManager
+    tm = ssh_mysql.SSHTunnelConnection(ssh_host, ssh_user, ssh_key, ssh_port)
 
-# Création d'une instance de SSHTunnelManager
-tm = ssh_mysql.SSHTunnelConnection(ssh_host, ssh_user, ssh_key, ssh_port)
+    # Insertion des logs dans la base de données
+    tm.tunnel_connect(remote_port, local_port)
+    sqlm = ssh_mysql.MySQL(admin_db, admin_password, local_port, db_name, db_table)
 
-# Insertion des logs dans la base de données
-tm.tunnel_connect(remote_port, local_port)
-sqlm = ssh_mysql.MySQL(admin_db, admin_password, local_port, db_name, db_table)
+    for date, time, username, ipaddress in data:
+        check = sqlm.fetch_data(
+            f"""SELECT COUNT(*) FROM {db_table} 
+            WHERE account = '{username}' 
+            AND date = '{date}' 
+            AND time = '{time}' 
+            AND IP = '{ipaddress}';""")
 
-for date, time, username, ipaddress in data:
-    check = sqlm.fetch_data(
-        f"""SELECT COUNT(*) FROM {db_table} 
-        WHERE account = '{username}' 
-        AND date = '{date}' 
-        AND time = '{time}' 
-        AND IP = '{ipaddress}';""")
+        if check[0][0] == 0:
+            sqlm.insert_logs(db_table, username, date, time, ipaddress)
+            print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
 
-    if check[0][0] == 0:
-        sqlm.insert_logs(db_table, username, date, time, ipaddress)
-        print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
-
-sqlm.close_connection()
-tm.stop_ssh_tunnel()
+    sqlm.close_connection()
+    tm.stop_ssh_tunnel()
 print("Fin de la connection")
 #-----------------------------------------------------------------------------------------------

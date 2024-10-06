@@ -49,8 +49,8 @@ class ssh_connect_sudo(ssh_connect):
             stdin.write(self.sudo_passwd + "\n")
             stdin.flush()
             
-            output = stdout.read().decode('utf-8')
-            error = stderr.read().decode('utf-8')
+            output = stdout.read().decode('utf-8').strip()
+            error = stderr.read().decode('utf-8').strip()
 
             if output:
                 return output

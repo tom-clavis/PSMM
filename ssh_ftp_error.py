@@ -41,33 +41,36 @@ logs = ftp_client.sudo_command("cat /var/log/vsftpd.log | grep 'FAIL LOGIN'")
 ftp_client.close()
 
 pattern = r'^(\w{3}\s+\w{3}\s+\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{4})\s+\[pid\s+\d+\]\s+\[(\w+)\].*Client\s+"([\d\.]+)"'
-data = re.findall(pattern, logs, re.MULTILINE)
+data = []
+if logs:
+    data = re.findall(pattern, logs, re.MULTILINE)
 
-# Création d'une instance de SSHTunnelManager
-tm = ssh_mysql.SSHTunnelConnection(mariadb_host, ssh_user, ssh_key, ssh_port)
+if data:
+    # Création d'une instance de SSHTunnelManager
+    tm = ssh_mysql.SSHTunnelConnection(mariadb_host, ssh_user, ssh_key, ssh_port)
 
-# Insertion des logs dans la base de données
-tm.tunnel_connect(remote_port, local_port)
-sqlm = ssh_mysql.MySQL(admin_db, admin_password, local_port, db_name, db_table)
-sqlm.execute_sql(f"USE {db_name};")
+    # Insertion des logs dans la base de données
+    tm.tunnel_connect(remote_port, local_port)
+    sqlm = ssh_mysql.MySQL(admin_db, admin_password, local_port, db_name, db_table)
+    sqlm.execute_sql(f"USE {db_name};")
 
-for match in data:
-    date = match[0]     # Date sans l'année
-    time = match[1]     # Heure
-    year = match[2]     # Année
-    username = match[3]     # Nom d'utilisateur
-    ipaddress = match[4]       # Adresse IP
+    for match in data:
+        date = match[0]     # Date sans l'année
+        time = match[1]     # Heure
+        year = match[2]     # Année
+        username = match[3]     # Nom d'utilisateur
+        ipaddress = match[4]       # Adresse IP
 
-    date_str = f"{date} {year}"
-    date_object = datetime.strptime(date_str, "%a %b %d %Y")
-    date = datetime.strftime(date_object, "%Y-%m-%d")
+        date_str = f"{date} {year}"
+        date_object = datetime.strptime(date_str, "%a %b %d %Y")
+        date = datetime.strftime(date_object, "%Y-%m-%d")
 
-    check = sqlm.fetch_data(f"SELECT COUNT(*) FROM {db_table} WHERE account = '{username}' AND date = '{date}' AND time = '{time}' AND IP = '{ipaddress}';")
+        check = sqlm.fetch_data(f"SELECT COUNT(*) FROM {db_table} WHERE account = '{username}' AND date = '{date}' AND time = '{time}' AND IP = '{ipaddress}';")
 
-    if check[0][0] == 0:
-        sqlm.insert_logs(db_table, username, date, time, ipaddress)
-        print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
+        if check[0][0] == 0:
+            sqlm.insert_logs(db_table, username, date, time, ipaddress)
+            print(f"[Insertion] Date: {date}, Time: {time}, Username: {username}, IP Address: {ipaddress}")
 
-sqlm.close_connection()
-tm.stop_ssh_tunnel()
+    sqlm.close_connection()
+    tm.stop_ssh_tunnel()
 print("Fin de la connection")
